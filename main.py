@@ -1,11 +1,22 @@
-from flask import Flask
-import json
+from flask import Flask,jsonify
+
+from flask_migrate import Migrate
+from db.config import DATABASE_URI
+
+from db.database import db
+from controllers import user_controller
 
 app = Flask(__name__)
 
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
+db.init_app(app)
+
+migrate = Migrate(app, db)
+
+from models.user import User
 @app.route('/')
-def home():
-    return "Welcome to the Late Show API!"
+def welcome ():
+    return jsonify({"message":"Welcome to the Late Show API!"})
 
 
 @app.route('/register')
@@ -35,10 +46,14 @@ def appearances():
 
 
 
-@app.route('/users')
-def users():
-    return "List of users will be here."
+@app.route('/users/<int:id>')
+def fetch_user(id):
+    user = user_controller.get_a_single_user(id)
+    if user:
+        return jsonify(user), 200
+    else:
+        return "User not found", 404
+    
 
 if __name__ == '__main__':
     app.run()
-# This is a simple Flask application that serves as a starting point for the Late Show API.
